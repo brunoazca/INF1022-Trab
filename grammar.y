@@ -12,8 +12,12 @@
 }
 
 %token FACA
+%token SER
 %token NUM
+%token VAR
 %type <sval> NUM
+%type <sval> VAR
+
 
 %%
 
@@ -22,7 +26,7 @@ programa:
     ;
 
 comando:
-    FACA                  { printf("Comando 'FACA' encontrado.\n"); }
+    FACA VAR SER NUM              { printf("%s = %s;\n", $2, $4);  free($2); free($4);}
     | NUM                 { printf("Número encontrado: %s\n", $1); free($1); }
     ;
 

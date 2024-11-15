@@ -40,12 +40,16 @@
       know about them.  */
    enum yytokentype {
      FACA = 258,
-     NUM = 259
+     SER = 259,
+     NUM = 260,
+     VAR = 261
    };
 #endif
 /* Tokens.  */
 #define FACA 258
-#define NUM 259
+#define SER 259
+#define NUM 260
+#define VAR 261
 
 
 
@@ -57,7 +61,7 @@ typedef union YYSTYPE
     char *sval;
 }
 /* Line 1529 of yacc.c.  */
-#line 61 "grammar.tab.h"
+#line 65 "grammar.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
