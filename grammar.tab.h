@@ -41,27 +41,57 @@
    enum yytokentype {
      FACA = 258,
      SER = 259,
-     NUM = 260,
-     VAR = 261
+     MOSTRE = 260,
+     ENCERRAR = 261,
+     SOME = 262,
+     COM = 263,
+     MULTIPLIQUE = 264,
+     POR = 265,
+     SUBTRAIA = 266,
+     DE = 267,
+     REPITA = 268,
+     VEZES = 269,
+     FIM = 270,
+     SE = 271,
+     ENTAO = 272,
+     SENAO = 273,
+     FIMENTAO = 274,
+     FIMSENAO = 275,
+     NUMBER = 276,
+     VAR = 277
    };
 #endif
 /* Tokens.  */
 #define FACA 258
 #define SER 259
-#define NUM 260
-#define VAR 261
+#define MOSTRE 260
+#define ENCERRAR 261
+#define SOME 262
+#define COM 263
+#define MULTIPLIQUE 264
+#define POR 265
+#define SUBTRAIA 266
+#define DE 267
+#define REPITA 268
+#define VEZES 269
+#define FIM 270
+#define SE 271
+#define ENTAO 272
+#define SENAO 273
+#define FIMENTAO 274
+#define FIMSENAO 275
+#define NUMBER 276
+#define VAR 277
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 10 "grammar.y"
-{
-    char *sval;
-}
+#line 171 "grammar.y"
+{ int int_val; char* str_val; }
 /* Line 1529 of yacc.c.  */
-#line 65 "grammar.tab.h"
+#line 95 "grammar.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

@@ -68,15 +68,47 @@
    enum yytokentype {
      FACA = 258,
      SER = 259,
-     NUM = 260,
-     VAR = 261
+     MOSTRE = 260,
+     ENCERRAR = 261,
+     SOME = 262,
+     COM = 263,
+     MULTIPLIQUE = 264,
+     POR = 265,
+     SUBTRAIA = 266,
+     DE = 267,
+     REPITA = 268,
+     VEZES = 269,
+     FIM = 270,
+     SE = 271,
+     ENTAO = 272,
+     SENAO = 273,
+     FIMENTAO = 274,
+     FIMSENAO = 275,
+     NUMBER = 276,
+     VAR = 277
    };
 #endif
 /* Tokens.  */
 #define FACA 258
 #define SER 259
-#define NUM 260
-#define VAR 261
+#define MOSTRE 260
+#define ENCERRAR 261
+#define SOME 262
+#define COM 263
+#define MULTIPLIQUE 264
+#define POR 265
+#define SUBTRAIA 266
+#define DE 267
+#define REPITA 268
+#define VEZES 269
+#define FIM 270
+#define SE 271
+#define ENTAO 272
+#define SENAO 273
+#define FIMENTAO 274
+#define FIMSENAO 275
+#define NUMBER 276
+#define VAR 277
 
 
 
@@ -84,12 +116,173 @@
 /* Copy the first part of user declarations.  */
 #line 1 "grammar.y"
 
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define PATH "output.c"
 
-    void yyerror(const char *s);
-    int yylex();
+FILE* output = NULL;
+
+struct variable {
+    char nome[31];
+    int valor; 
+};
+typedef struct variable Variable;
+
+struct variables_if {
+    Variable vars[100];
+};
+typedef struct variables_if VariablesIF;
+
+Variable variaveis[100];
+VariablesIF variaveis_if[100] = {0};
+int var_count = 0;
+int ifs_count = 0;
+int local_if_count = 0;
+
+char* itoa_safe(int number) {
+    char* arr = (char*)malloc(30); 
+    int index = 0;
+    if (number == 0) {
+        arr[index++] = '0';
+    }
+    while (number > 0) {
+        arr[index++] = (number % 10) + '0';
+        number /= 10;
+    }
+    arr[index] = '\0';
+    for (int i = 0; i < index / 2; i++) {
+        char temp = arr[i];
+        arr[i] = arr[index - i - 1];
+        arr[index - i - 1] = temp;
+    }
+    return arr;
+}
+
+int get_variable_value(const char* name) {
+    for (int i = 0; i < var_count; i++) {
+        if (strcmp(name, variaveis[i].nome) == 0) {
+            return variaveis[i].valor;
+        }
+    }
+    fprintf(stderr, "Erro: variável %s não foi encontrada\n", name);
+    return -1;
+}
+
+int is_variable_declared_if(const char* name) {
+    for (int i = 0; i < local_if_count; i++) {
+        if (strcmp(name, variaveis_if[ifs_count].vars[i].nome) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int get_variable_value_if(const char* name) {
+    for (int i = 0; i < local_if_count; i++) {
+        if (strcmp(name, variaveis_if[ifs_count].vars[i].nome) == 0) {
+            return variaveis_if[ifs_count].vars[i].valor;
+        }
+    }
+    fprintf(stderr, "Erro: variável %s não foi encontrada\n", name);
+    return -1;
+}
+
+void set_variable_value_if(const char* name, int value) {
+    for (int i = 0; i < local_if_count; i++) {
+        if (strcmp(name, variaveis_if[ifs_count].vars[i].nome) == 0) {
+            variaveis_if[ifs_count].vars[i].valor = value;
+            return;
+        }
+    }
+    strcpy(variaveis_if[ifs_count].vars[local_if_count].nome, name);
+    variaveis_if[ifs_count].vars[local_if_count].valor = value;
+    local_if_count++;
+}
+
+void set_variable_value(const char* name, int value) {
+    for (int i = 0; i < var_count; i++) {
+        if (strcmp(variaveis[i].nome, name) == 0) {
+            variaveis[i].valor = value;
+            return;
+        }
+    }
+    strcpy(variaveis[var_count].nome, name);
+    variaveis[var_count].valor = value;
+    var_count++;
+}
+
+void start_program(void) {
+    output = fopen(PATH, "w");
+    if (output == NULL) {
+        perror("Erro ao abrir arquivo de saída");
+        exit(1);
+    }
+    fprintf(output, "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n");
+}
+
+void export_code(const char* text) {
+    fprintf(output, "\t%s", text);
+}
+
+void close_program(void) {
+    export_code("\n\treturn 0;\n}");
+    fclose(output);
+}
+
+int is_variable_declared(const char* name) {
+    for (int i = 0; i < var_count; i++) {
+        if (strcmp(name, variaveis[i].nome) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void export_assignment(const char* name, int value) {
+    char formatted[101];
+    if (is_variable_declared(name)) {
+        sprintf(formatted, "%s = %d;\n", name, value);
+    } else {
+        sprintf(formatted, "int %s = %d;\n", name, value);
+    }
+    export_code(formatted);
+}
+
+void export_print(const char* name) {
+    char formatted[101];
+    sprintf(formatted, "printf(\"Mostrando %s: %%d\\n\", %s);\n", name, name);
+    export_code(formatted);
+}
+
+void export_operation_add(const char* var1, const char* var2) {
+    char formatted[101];
+    sprintf(formatted, "%s += %s;\n", var1, var2);
+    export_code(formatted);
+}
+
+void export_repetition(int times) {
+    char formatted[101];
+    sprintf(formatted, "for (int i = 0; i < %d; i++) {\n", times);
+    export_code(formatted);
+}
+
+void export_if(int condition) {
+    char formatted[101];
+    sprintf(formatted, "if (%d) {\n", condition);
+    export_code(formatted);
+}
+
+void export_else(void) {
+    export_code("else {\n");
+}
+
+void export_end_block(void) {
+    export_code("}\n");
+}
+
+void yyerror(char* s);
+int yylex();
 
 
 /* Enabling traces.  */
@@ -112,12 +305,10 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 10 "grammar.y"
-{
-    char *sval;
-}
+#line 171 "grammar.y"
+{ int int_val; char* str_val; }
 /* Line 193 of yacc.c.  */
-#line 121 "grammar.tab.c"
+#line 312 "grammar.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -130,7 +321,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 134 "grammar.tab.c"
+#line 325 "grammar.tab.c"
 
 #ifdef short
 # undef short
@@ -343,22 +534,22 @@ union yyalloc
 #endif
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  2
+#define YYFINAL  23
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   5
+#define YYLAST   37
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  7
+#define YYNTOKENS  25
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  3
+#define YYNNTS  10
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  5
+#define YYNRULES  18
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  9
+#define YYNSTATES  45
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   261
+#define YYMAXUTOK   277
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -371,7 +562,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    24,    23,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -392,7 +583,8 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17,    18,    19,    20,    21,    22
 };
 
 #if YYDEBUG
@@ -400,20 +592,27 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     4,     7,    12
+       0,     0,     3,     5,     8,    10,    12,    14,    16,    18,
+      20,    22,    28,    32,    38,    45,    51,    57,    65
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-       8,     0,    -1,    -1,     8,     9,    -1,     3,     6,     4,
-       5,    -1,     5,    -1
+      26,     0,    -1,    27,    -1,    28,    27,    -1,    28,    -1,
+      29,    -1,    30,    -1,    31,    -1,    32,    -1,    33,    -1,
+      34,    -1,     3,    22,     4,    21,    23,    -1,     5,    22,
+      23,    -1,     7,    22,     8,    22,    23,    -1,    13,    21,
+      14,    24,    27,    15,    -1,    16,    21,    17,    27,    19,
+      -1,    16,    22,    17,    27,    19,    -1,    16,    21,    17,
+      27,    18,    27,    20,    -1,     6,    23,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    24,    24,    25,    29,    30
+       0,   179,   179,   181,   181,   183,   183,   183,   183,   183,
+     183,   185,   190,   192,   194,   196,   197,   198,   200
 };
 #endif
 
@@ -422,8 +621,11 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "FACA", "SER", "NUM", "VAR", "$accept",
-  "programa", "comando", 0
+  "$end", "error", "$undefined", "FACA", "SER", "MOSTRE", "ENCERRAR",
+  "SOME", "COM", "MULTIPLIQUE", "POR", "SUBTRAIA", "DE", "REPITA", "VEZES",
+  "FIM", "SE", "ENTAO", "SENAO", "FIMENTAO", "FIMSENAO", "NUMBER", "VAR",
+  "';'", "':'", "$accept", "programa", "cmds", "cmd", "atribuicao",
+  "impressao", "operacao", "repeticao", "condicao", "encerrar", 0
 };
 #endif
 
@@ -432,20 +634,24 @@ static const char *const yytname[] =
    token YYLEX-NUM.  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260,   261
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
+     275,   276,   277,    59,    58
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,     7,     8,     8,     9,     9
+       0,    25,    26,    27,    27,    28,    28,    28,    28,    28,
+      28,    29,    30,    31,    32,    33,    33,    33,    34
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     0,     2,     4,     1
+       0,     2,     1,     2,     1,     1,     1,     1,     1,     1,
+       1,     5,     3,     5,     6,     5,     5,     7,     2
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -453,27 +659,35 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     0,     5,     3,     0,     0,     4
+       0,     0,     0,     0,     0,     0,     0,     0,     2,     4,
+       5,     6,     7,     8,     9,    10,     0,     0,    18,     0,
+       0,     0,     0,     1,     3,     0,    12,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,    11,    13,     0,     0,
+      15,    16,    14,     0,    17
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,     5
+      -1,     7,     8,     9,    10,    11,    12,    13,    14,    15
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -6
+#define YYPACT_NINF -21
 static const yytype_int8 yypact[] =
 {
-      -6,     0,    -6,    -5,    -6,    -6,    -2,    -1,    -6
+      -2,   -20,   -12,   -11,    -7,    -8,   -15,    16,   -21,    -2,
+     -21,   -21,   -21,   -21,   -21,   -21,    13,    -5,   -21,    11,
+       8,     6,     9,   -21,   -21,     4,   -21,     5,     7,    -2,
+      -2,    10,    12,    -2,   -10,    15,   -21,   -21,    14,    -2,
+     -21,   -21,   -21,    17,   -21
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -6,    -6,    -6
+     -21,   -21,    -9,   -21,   -21,   -21,   -21,   -21,   -21,   -21
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -483,19 +697,29 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       2,     6,     7,     3,     8,     4
+      24,     1,    16,     2,     3,     4,    21,    22,    39,    40,
+      17,     5,    18,    20,     6,    19,    23,    25,    26,    27,
+      34,    35,    28,    29,    38,    31,    30,    32,     0,    42,
+      43,    33,     0,    36,    41,    37,     0,    44
 };
 
-static const yytype_uint8 yycheck[] =
+static const yytype_int8 yycheck[] =
 {
-       0,     6,     4,     3,     5,     5
+       9,     3,    22,     5,     6,     7,    21,    22,    18,    19,
+      22,    13,    23,    21,    16,    22,     0,     4,    23,     8,
+      29,    30,    14,    17,    33,    21,    17,    22,    -1,    15,
+      39,    24,    -1,    23,    19,    23,    -1,    20
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     8,     0,     3,     5,     9,     6,     4,     5
+       0,     3,     5,     6,     7,    13,    16,    26,    27,    28,
+      29,    30,    31,    32,    33,    34,    22,    22,    23,    22,
+      21,    21,    22,     0,    27,     4,    23,     8,    14,    17,
+      17,    21,    22,    24,    27,    27,    23,    23,    27,    18,
+      19,    19,    15,    27,    20
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1309,19 +1533,52 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 4:
-#line 29 "grammar.y"
-    { printf("%s = %s;\n", (yyvsp[(2) - (4)].sval), (yyvsp[(4) - (4)].sval));  free((yyvsp[(2) - (4)].sval)); free((yyvsp[(4) - (4)].sval));;}
+        case 11:
+#line 185 "grammar.y"
+    {
+    export_assignment((yyvsp[(2) - (5)].str_val), (yyvsp[(4) - (5)].int_val));
+    set_variable_value((yyvsp[(2) - (5)].str_val), (yyvsp[(4) - (5)].int_val));
+;}
     break;
 
-  case 5:
-#line 30 "grammar.y"
-    { printf("Número encontrado: %s\n", (yyvsp[(1) - (1)].sval)); free((yyvsp[(1) - (1)].sval)); ;}
+  case 12:
+#line 190 "grammar.y"
+    { export_print((yyvsp[(2) - (3)].str_val)); ;}
+    break;
+
+  case 13:
+#line 192 "grammar.y"
+    { export_operation_add((yyvsp[(2) - (5)].str_val), (yyvsp[(4) - (5)].str_val)); ;}
+    break;
+
+  case 14:
+#line 194 "grammar.y"
+    { export_end_block(); ;}
+    break;
+
+  case 15:
+#line 196 "grammar.y"
+    { export_end_block(); ;}
+    break;
+
+  case 16:
+#line 197 "grammar.y"
+    { export_end_block(); ;}
+    break;
+
+  case 17:
+#line 198 "grammar.y"
+    { export_end_block(); ;}
+    break;
+
+  case 18:
+#line 200 "grammar.y"
+    { close_program(); exit(0); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1325 "grammar.tab.c"
+#line 1582 "grammar.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1535,14 +1792,15 @@ yyreturn:
 }
 
 
-#line 33 "grammar.y"
+#line 202 "grammar.y"
 
 
-void yyerror(const char *s) {
+void yyerror(char* s) {
     fprintf(stderr, "Erro: %s\n", s);
 }
 
-int main() {
+int main(void) {
+    start_program();
     return yyparse();
 }
 
