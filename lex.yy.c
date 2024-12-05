@@ -495,7 +495,7 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "lex.l"
 #line 2 "lex.l"
-#include "grammar.tab.h"    
+    #include "grammar.tab.h"
 #line 499 "lex.yy.c"
 #line 500 "lex.yy.c"
 
@@ -866,12 +866,12 @@ YY_RULE_SETUP
 case 19:
 YY_RULE_SETUP
 #line 25 "lex.l"
-{ yylval.str_val = strdup(yytext); return VAR; }
+{ yylval.var = strdup(yytext); return var; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
 #line 26 "lex.l"
-{ yylval.int_val = atoi(yytext); return NUMBER; }
+{ yylval.num = atoi(yytext); return num; }
 	YY_BREAK
 case 21:
 /* rule 21 can match eol */

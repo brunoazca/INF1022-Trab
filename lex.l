@@ -1,5 +1,5 @@
 %{
-#include "grammar.tab.h"    
+    #include "grammar.tab.h"
 %}
 
 %%
@@ -22,8 +22,8 @@
 "FIMENTAO"              { return FIMENTAO; }
 "FIMSENAO"              { return FIMSENAO; }
 
-[a-zA-Z]+               { yylval.str_val = strdup(yytext); return VAR; }
-[1-9][0-9]*             { yylval.int_val = atoi(yytext); return NUM; }
+[a-zA-Z]+               { yylval.var = strdup(yytext); return var; }
+[1-9][0-9]*             { yylval.num = atoi(yytext); return num; }
 [ \t\n]                 { /* Ignora espaços, tabulações e novas linhas */ }
 [();:]                  { return yytext[0]; }
 .                       { /* Ignora caracteres não reconhecidos */ }
