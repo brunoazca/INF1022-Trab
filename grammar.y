@@ -4,8 +4,12 @@
 #include <string.h>
 #define PATH "output.c"
 
-extern FILE* yyin;
 
+void yyerror(const char *s);
+
+int yylex();
+
+extern FILE* yyin;
 FILE* output = NULL;
 
 struct var {
@@ -165,11 +169,8 @@ void avanca_count_blocos_if(void) {
     local_if_count = 0;
 }
 
-void yyerror(char* s) {
-    fprintf(stderr, "Erro: %s\n", s);
-}
 
-int yylex();
+
 
 %}
 
@@ -230,6 +231,11 @@ encerrar:
 
 %%
 
+
+
+void yyerror(const char *s) {
+    fprintf(stderr, "Error: %s\n", s);
+}
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

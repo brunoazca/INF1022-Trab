@@ -74,8 +74,12 @@
 #include <string.h>
 #define PATH "output.c"
 
-extern FILE* yyin;
 
+void yyerror(const char *s);
+
+int yylex();
+
+extern FILE* yyin;
 FILE* output = NULL;
 
 struct var {
@@ -235,14 +239,11 @@ void avanca_count_blocos_if(void) {
     local_if_count = 0;
 }
 
-void yyerror(char* s) {
-    fprintf(stderr, "Erro: %s\n", s);
-}
-
-int yylex();
 
 
-#line 246 "grammar.tab.c"
+
+
+#line 247 "grammar.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -692,9 +693,9 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   185,   185,   189,   190,   194,   195,   196,   197,   198,
-     199,   203,   207,   211,   212,   213,   217,   221,   222,   223,
-     224,   228
+       0,   186,   186,   190,   191,   195,   196,   197,   198,   199,
+     200,   204,   208,   212,   213,   214,   218,   222,   223,   224,
+     225,   229
 };
 #endif
 
@@ -1284,127 +1285,127 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: cmds  */
-#line 185 "grammar.y"
+#line 186 "grammar.y"
          {;}
-#line 1290 "grammar.tab.c"
+#line 1291 "grammar.tab.c"
     break;
 
   case 3: /* cmds: cmd cmds  */
-#line 189 "grammar.y"
+#line 190 "grammar.y"
              {;}
-#line 1296 "grammar.tab.c"
+#line 1297 "grammar.tab.c"
     break;
 
   case 4: /* cmds: cmd  */
-#line 190 "grammar.y"
+#line 191 "grammar.y"
           {;}
-#line 1302 "grammar.tab.c"
+#line 1303 "grammar.tab.c"
     break;
 
   case 5: /* cmd: atribuicao  */
-#line 194 "grammar.y"
+#line 195 "grammar.y"
                {;}
-#line 1308 "grammar.tab.c"
+#line 1309 "grammar.tab.c"
     break;
 
   case 6: /* cmd: impressao  */
-#line 195 "grammar.y"
+#line 196 "grammar.y"
                 {;}
-#line 1314 "grammar.tab.c"
+#line 1315 "grammar.tab.c"
     break;
 
   case 7: /* cmd: operacao  */
-#line 196 "grammar.y"
+#line 197 "grammar.y"
                {;}
-#line 1320 "grammar.tab.c"
+#line 1321 "grammar.tab.c"
     break;
 
   case 8: /* cmd: repeticao  */
-#line 197 "grammar.y"
+#line 198 "grammar.y"
                 {;}
-#line 1326 "grammar.tab.c"
+#line 1327 "grammar.tab.c"
     break;
 
   case 9: /* cmd: condicao  */
-#line 198 "grammar.y"
+#line 199 "grammar.y"
                {;}
-#line 1332 "grammar.tab.c"
+#line 1333 "grammar.tab.c"
     break;
 
   case 10: /* cmd: encerrar  */
-#line 199 "grammar.y"
+#line 200 "grammar.y"
                {;}
-#line 1338 "grammar.tab.c"
+#line 1339 "grammar.tab.c"
     break;
 
   case 11: /* atribuicao: FACA var SER num ';'  */
-#line 203 "grammar.y"
+#line 204 "grammar.y"
                          { exportar_atribuicao((yyvsp[-3].var), (yyvsp[-1].num)); set_valor_var((yyvsp[-3].var), (yyvsp[-1].num)); }
-#line 1344 "grammar.tab.c"
+#line 1345 "grammar.tab.c"
     break;
 
   case 12: /* impressao: MOSTRE var ';'  */
-#line 207 "grammar.y"
+#line 208 "grammar.y"
                    { exportar_impressao((yyvsp[-1].var)); }
-#line 1350 "grammar.tab.c"
+#line 1351 "grammar.tab.c"
     break;
 
   case 13: /* operacao: SOME var COM var ';'  */
-#line 211 "grammar.y"
+#line 212 "grammar.y"
                          { exportar_operacao_soma((yyvsp[-3].var), (yyvsp[-1].var)); }
-#line 1356 "grammar.tab.c"
+#line 1357 "grammar.tab.c"
     break;
 
   case 14: /* operacao: SUBTRAIA var DE var ';'  */
-#line 212 "grammar.y"
+#line 213 "grammar.y"
                               { exportar_operacao_diferenca((yyvsp[-3].var), (yyvsp[-1].var)); }
-#line 1362 "grammar.tab.c"
+#line 1363 "grammar.tab.c"
     break;
 
   case 15: /* operacao: MULTIPLIQUE var POR var ';'  */
-#line 213 "grammar.y"
+#line 214 "grammar.y"
                                   { exportar_operacao_multiplicacao((yyvsp[-3].var), (yyvsp[-1].var)); }
-#line 1368 "grammar.tab.c"
+#line 1369 "grammar.tab.c"
     break;
 
   case 16: /* repeticao: REPITA num VEZES ':' cmds FIM  */
-#line 217 "grammar.y"
+#line 218 "grammar.y"
                                   { exportar_repeticao((yyvsp[-4].num)); exportar_fim_repeticao(); }
-#line 1374 "grammar.tab.c"
+#line 1375 "grammar.tab.c"
     break;
 
   case 17: /* condicao: SE num ENTAO cmds FIMENTAO  */
-#line 221 "grammar.y"
+#line 222 "grammar.y"
                                { exportar_if_num((yyvsp[-3].num)); exportar_fim_condicao(); }
-#line 1380 "grammar.tab.c"
+#line 1381 "grammar.tab.c"
     break;
 
   case 18: /* condicao: SE num ENTAO cmds SENAO cmds FIMSENAO  */
-#line 222 "grammar.y"
+#line 223 "grammar.y"
                                             { exportar_if_num((yyvsp[-5].num)); exportar_else(); exportar_fim_condicao(); }
-#line 1386 "grammar.tab.c"
+#line 1387 "grammar.tab.c"
     break;
 
   case 19: /* condicao: SE var ENTAO cmds FIMENTAO  */
-#line 223 "grammar.y"
+#line 224 "grammar.y"
                                  { exportar_if_var((yyvsp[-3].var)); exportar_else(); exportar_fim_condicao(); }
-#line 1392 "grammar.tab.c"
+#line 1393 "grammar.tab.c"
     break;
 
   case 20: /* condicao: SE var ENTAO cmds SENAO cmds FIMSENAO  */
-#line 224 "grammar.y"
+#line 225 "grammar.y"
                                             { exportar_if_var((yyvsp[-5].var)); exportar_else(); exportar_fim_condicao(); }
-#line 1398 "grammar.tab.c"
+#line 1399 "grammar.tab.c"
     break;
 
   case 21: /* encerrar: ENCERRAR ';'  */
-#line 228 "grammar.y"
+#line 229 "grammar.y"
                  { encerrar(); }
-#line 1404 "grammar.tab.c"
+#line 1405 "grammar.tab.c"
     break;
 
 
-#line 1408 "grammar.tab.c"
+#line 1409 "grammar.tab.c"
 
       default: break;
     }
@@ -1597,9 +1598,14 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 231 "grammar.y"
+#line 232 "grammar.y"
 
 
+
+
+void yyerror(const char *s) {
+    fprintf(stderr, "Error: %s\n", s);
+}
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
