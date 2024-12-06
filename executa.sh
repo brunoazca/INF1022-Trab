@@ -34,7 +34,7 @@ if [ $? -ne 0 ]; then
     # exit 1
 fi
 # Rodar o executável
-./grammar rust.rs entrada.mag
+./grammar entrada.mag
 if [ $? -ne 0 ]; then
     echo "Erro ao rodar o executável grammar."
     # exit 1

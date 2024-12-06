@@ -7,7 +7,7 @@
 
 void yyerror(const char *s);
 
-int yylex();
+int yylex(void);
 
 extern FILE* yyin;
 FILE* output = NULL;
@@ -180,6 +180,7 @@ void avanca_count_blocos_if(void) {
 %token <num> num
 %token <var> var
 
+
 %%
 
 programa:
@@ -238,12 +239,7 @@ void yyerror(const char *s) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Uso: %s <arquivo_entrada>\n", argv[0]);
-        return 1;
-    }
-
-    // Abrir o arquivo especificado
+    iniciar();
     yyin = fopen(argv[1], "r");
     if (!yyin) {
         perror("Erro ao abrir o arquivo");
@@ -255,14 +251,7 @@ int main(int argc, char* argv[]) {
     while ((c = fgetc(yyin)) != EOF) {
         putchar(c);  // Imprime o caractere lido
     }
+    rewind(yyin);
     printf("\n");
-
-    // Iniciar o parsing
-    if (yyparse() != 0) {
-        fprintf(stderr, "Erro durante o parsing.\n");
-        fclose(yyin);
-        return 1;
-    } 
-
-    return 0;
+    return yyparse();
 }
