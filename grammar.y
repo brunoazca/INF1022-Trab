@@ -20,6 +20,8 @@ typedef struct var Var;
 
 Var variaveis[100];
 int var_count = 0;
+int num_ident = 0;
+int num_ident_anterior = 0;
 
 char* itoa(int num) {
     char* arr = (char*)malloc(30); 
@@ -73,14 +75,11 @@ void iniciar(void) {
 }
 
 void exportar(const char* texto) {
-    fprintf(output, "\t%s", texto);
-}
+    for(int i = num_ident; i > 0; i--){
+        fprintf(output, "\t");
+    }
 
-void encerrar(void) {
-    exportar_buffer();
-    exportar("\n\treturn 0;\n}");
-    fclose(output);
-    exit(0);
+    fprintf(output, "\t%s", texto);
 }
 
 int jaDeclarada(const char* variavel) {
@@ -96,74 +95,74 @@ void exportar_atribuicao(const char* variavel, int valor) {
     char str_formatada[101];
     if (jaDeclarada(variavel)) {
         sprintf(str_formatada, "%s = %d;\n", variavel, valor);
-        if(ehBuffer){
-            adicionar_ao_buffer(str_formatada);
-        } else{
-            exportar(str_formatada);
-        }
+        exportar(str_formatada);
     } else{
         fprintf(stderr, "Erro: variavel nao declarada\n");
         exit(1);
     }
 }
 
-
 void exportar_nova_atribuicao(const char* variavel, int valor) {
     char str_formatada[101];
     sprintf(str_formatada, "int %s = %d;\n", variavel, valor);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }
+    exportar(str_formatada);
 }
-
-
 
 void exportar_nova_atribuicao_vazia(const char* variavel) {
     char str_formatada[101];
     sprintf(str_formatada, "int %s;\n", variavel);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
+    exportar(str_formatada);
+}
 
 void exportar_impressao(const char* variavel) {
     char str_formatada[101];
     sprintf(str_formatada, "printf(\"Mostrando %s: %%d\\n\", %s);\n", variavel, variavel);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
+    exportar(str_formatada);
+}
+
+void exportar_impressao_num(int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "printf(\"Mostrando %d\\n\");\n", num);
+    exportar(str_formatada);
+}
 
 void exportar_operacao_soma(const char* variavel1, const char* variavel2) {
     char str_formatada[101];
     sprintf(str_formatada, "%s += %s;\n", variavel1, variavel2);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
+    exportar(str_formatada);
+}
 
 void exportar_operacao_diferenca(const char* variavel1, const char* variavel2) {
     char str_formatada[101];
     sprintf(str_formatada, "%s -= %s;\n", variavel1, variavel2);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
+    exportar(str_formatada);
+}
 
 void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel2) {
     char str_formatada[101];
     sprintf(str_formatada, "%s *= %s;\n", variavel1, variavel2);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }
+
+    exportar(str_formatada);
+}
+
+
+void exportar_operacao_soma_num(const char* variavel1, int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s += %d;\n", variavel1, num);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_diferenca_num(const char* variavel1, int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s -= %d;\n", variavel1, num);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_multiplicacao_num(const char* variavel1, int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s *= %d;\n", variavel1, num);
+
+    exportar(str_formatada);
 }
 
 void exportar_repeticao(int vezes) {
@@ -193,12 +192,11 @@ void exportar_conteudo_if_num(int num) {
 }
 
 
-
 %}
 
 %union {int num; char* var;}
 %start programa
-%token FACA NOVO SER MOSTRE ENCERRAR SOME COM MULTIPLIQUE POR SUBTRAIA DE REPITA VEZES FIM SE ENTAO SENAO FIMENTAO FIMSENAO
+%token FACA NOVO SER MOSTRE SOME COM MULTIPLIQUE POR SUBTRAIA DE REPITA VEZES FIM SE ENTAO SENAO FIMENTAO 
 %token <num> num
 %token <var> var
 
@@ -220,44 +218,48 @@ cmd:
     | operacao {;}
     | repeticao {;}
     | condicao {;}
-    | encerrar {;}
     ;
 
 atribuicao:
     FACA NOVO var SER num ';' { exportar_nova_atribuicao($3, $5); set_valor_var($3, $5); }
-    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3); set_valor_var($3);}
+    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3); set_valor_var($3, 0);}
     | FACA var SER num ';' { exportar_atribuicao($2, $4); set_valor_var($2, $4); }
     ;
 
 impressao:
     MOSTRE var ';' { exportar_impressao($2); }
+    | MOSTRE num ';' { exportar_impressao_num($2); }
     ;
 
 operacao:
     SOME var COM var ';' { exportar_operacao_soma($2, $4); }
     | SUBTRAIA var DE var ';' { exportar_operacao_diferenca($2, $4); }
     | MULTIPLIQUE var POR var ';' { exportar_operacao_multiplicacao($2, $4); }
+    | SOME var COM num ';' { exportar_operacao_soma_num($2, $4); }
+    | SUBTRAIA var DE num ';' { exportar_operacao_diferenca_num($2, $4); }
+    | MULTIPLIQUE var POR num ';' { exportar_operacao_multiplicacao_num($2, $4); }
     ;
 
+
 repeticao:
-    REPITA num VEZES ':' {exportar_repeticao($2);}
+    REPITA num VEZES ':'{exportar_repeticao($2); num_ident++;}
     cmds 
-    FIM { exportar_fim_repeticao(); }
+    FIM { num_ident--;exportar_fim_repeticao(); }
     ;
 
 condicao:
     SE 
-    { exportar("if("); } 
+    { num_ident_anterior = num_ident; ; exportar("if("); num_ident = 0;} 
     expr_bool 
     ENTAO 
-    { exportar(") {\n\t"); }  
+    {  exportar(") {\n"); num_ident = num_ident_anterior + 1;}  
     cmds
     senao
     FIMENTAO 
-    { exportar("}\n"); };
+    {  num_ident--; exportar("}\n");};
 
 senao:
-    SENAO { exportar( "} else {\n\t"); }
+    SENAO { exportar( "} else {\n");num_ident++; }
     cmds
     | 
     {;}
@@ -267,9 +269,6 @@ expr_bool:
     |
     num {  exportar_conteudo_if_num($1); };
     
-encerrar:
-    ENCERRAR ';' { encerrar(); }
-    ;
 
 %%
 
@@ -293,6 +292,11 @@ int main(int argc, char* argv[]) {
         putchar(c);  // Imprime o caractere lido
     }
     rewind(yyin);
+
+    yyparse();
+    
     printf("\n");
-    return yyparse();
+    fprintf(output, "\n\treturn 0;\n}");
+    fclose(output);
+    return 0;
 }

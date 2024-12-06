@@ -7,7 +7,6 @@
 "NOVO"                  { return NOVO; }
 "SER"                   { return SER; }
 "MOSTRE"                { return MOSTRE; }
-"ENCERRAR"              { return ENCERRAR; }
 "SOME"                  { return SOME; }
 "COM"                   { return COM; }
 "MULTIPLIQUE"           { return MULTIPLIQUE; }
@@ -21,7 +20,6 @@
 "ENTAO"                 { return ENTAO; }
 "SENAO"                 { return SENAO; }
 "FIMENTAO"              { return FIMENTAO; }
-"FIMSENAO"              { return FIMSENAO; }
 
 [a-zA-Z]+               { yylval.var = strdup(yytext); return var; }
 [1-9][0-9]*             { yylval.num = atoi(yytext); return num; }

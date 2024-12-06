@@ -90,9 +90,8 @@ typedef struct var Var;
 
 Var variaveis[100];
 int var_count = 0;
-char buffer_cmds[1024];
-int buffer_pos = 0;
-
+int num_ident = 0;
+int num_ident_anterior = 0;
 
 char* itoa(int num) {
     char* arr = (char*)malloc(30); 
@@ -146,36 +145,11 @@ void iniciar(void) {
 }
 
 void exportar(const char* texto) {
-    fprintf(output, "\t%s", texto);
-}
-
-void limpar_buffer() {
-    memset(buffer_cmds, 0, sizeof(buffer_cmds));
-    buffer_pos = 0;
-}
-
-void adicionar_ao_buffer(const char* texto) {
-   
-    int len = strlen(texto);
-    if (buffer_pos + len < sizeof(buffer_cmds)) {
-        strcpy(buffer_cmds + buffer_pos, texto);
-        buffer_pos += len;
-    } else {
-        fprintf(stderr, "Erro: buffer de comandos excedido\n");
-        exit(1);
+    for(int i = num_ident; i > 0; i--){
+        fprintf(output, "\t");
     }
-}
 
-void exportar_buffer() {
-    exportar(buffer_cmds);
-    limpar_buffer();  // Limpa o buffer após exportar
-}
-
-void encerrar(void) {
-    exportar_buffer();
-    exportar("\n\treturn 0;\n}");
-    fclose(output);
-    exit(0);
+    fprintf(output, "\t%s", texto);
 }
 
 int jaDeclarada(const char* variavel) {
@@ -187,100 +161,89 @@ int jaDeclarada(const char* variavel) {
     return 0;
 }
 
-void exportar_atribuicao(const char* variavel, int valor, int ehBuffer) {
+void exportar_atribuicao(const char* variavel, int valor) {
     char str_formatada[101];
     if (jaDeclarada(variavel)) {
         sprintf(str_formatada, "%s = %d;\n", variavel, valor);
-        if(ehBuffer){
-            adicionar_ao_buffer(str_formatada);
-        } else{
-            exportar(str_formatada);
-        }
+        exportar(str_formatada);
     } else{
         fprintf(stderr, "Erro: variavel nao declarada\n");
         exit(1);
     }
 }
 
-
-void exportar_nova_atribuicao(const char* variavel, int valor, int ehBuffer) {
+void exportar_nova_atribuicao(const char* variavel, int valor) {
     char str_formatada[101];
     sprintf(str_formatada, "int %s = %d;\n", variavel, valor);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }
+    exportar(str_formatada);
 }
 
-
-
-void exportar_nova_atribuicao_vazia(const char* variavel, int ehBuffer) {
+void exportar_nova_atribuicao_vazia(const char* variavel) {
     char str_formatada[101];
     sprintf(str_formatada, "int %s;\n", variavel);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
-
-void exportar_impressao(const char* variavel, int ehBuffer) {
-    char str_formatada[101];
-    sprintf(str_formatada, "printf(\"Mostrando %s: %%d\\n\", %s);\n", variavel, variavel);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
-
-void exportar_operacao_soma(const char* variavel1, const char* variavel2, int ehBuffer) {
-    char str_formatada[101];
-    sprintf(str_formatada, "%s += %s;\n", variavel1, variavel2);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
-
-void exportar_operacao_diferenca(const char* variavel1, const char* variavel2, int ehBuffer) {
-    char str_formatada[101];
-    sprintf(str_formatada, "%s -= %s;\n", variavel1, variavel2);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }}
-
-void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel2, int ehBuffer) {
-    char str_formatada[101];
-    sprintf(str_formatada, "%s *= %s;\n", variavel1, variavel2);
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-    }
+    exportar(str_formatada);
 }
 
-void exportar_repeticao(int vezes, int ehBuffer) {
+void exportar_impressao(const char* variavel) {
+    char str_formatada[101];
+    sprintf(str_formatada, "printf(\"Mostrando %s: %%d\\n\", %s);\n", variavel, variavel);
+    exportar(str_formatada);
+}
+
+void exportar_impressao_num(int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "printf(\"Mostrando %d\\n\");\n", num);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_soma(const char* variavel1, const char* variavel2) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s += %s;\n", variavel1, variavel2);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_diferenca(const char* variavel1, const char* variavel2) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s -= %s;\n", variavel1, variavel2);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel2) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s *= %s;\n", variavel1, variavel2);
+
+    exportar(str_formatada);
+}
+
+
+void exportar_operacao_soma_num(const char* variavel1, int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s += %d;\n", variavel1, num);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_diferenca_num(const char* variavel1, int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s -= %d;\n", variavel1, num);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_multiplicacao_num(const char* variavel1, int num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s *= %d;\n", variavel1, num);
+
+    exportar(str_formatada);
+}
+
+void exportar_repeticao(int vezes) {
     char str_formatada[101];
     sprintf(str_formatada, "for (int i = 0; i < %d; i++) {\n", vezes);
 
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-        exportar_buffer();
-
-    }
-
+    exportar(str_formatada);
 }
 
-void exportar_fim_repeticao(int ehBuffer) {
-    if(ehBuffer){
-        adicionar_ao_buffer("}\n");
-    } else{
-        exportar("}\n");
-    }
+void exportar_fim_repeticao() {
+    exportar("}\n");
 }
 
 
@@ -296,13 +259,11 @@ void exportar_conteudo_if_num(int num) {
     sprintf(str_formatada, "%d", num);
     
     exportar(str_formatada);
-
 }
 
 
 
-
-#line 306 "grammar.tab.c"
+#line 267 "grammar.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -337,41 +298,38 @@ enum yysymbol_kind_t
   YYSYMBOL_NOVO = 4,                       /* NOVO  */
   YYSYMBOL_SER = 5,                        /* SER  */
   YYSYMBOL_MOSTRE = 6,                     /* MOSTRE  */
-  YYSYMBOL_ENCERRAR = 7,                   /* ENCERRAR  */
-  YYSYMBOL_SOME = 8,                       /* SOME  */
-  YYSYMBOL_COM = 9,                        /* COM  */
-  YYSYMBOL_MULTIPLIQUE = 10,               /* MULTIPLIQUE  */
-  YYSYMBOL_POR = 11,                       /* POR  */
-  YYSYMBOL_SUBTRAIA = 12,                  /* SUBTRAIA  */
-  YYSYMBOL_DE = 13,                        /* DE  */
-  YYSYMBOL_REPITA = 14,                    /* REPITA  */
-  YYSYMBOL_VEZES = 15,                     /* VEZES  */
-  YYSYMBOL_FIM = 16,                       /* FIM  */
-  YYSYMBOL_SE = 17,                        /* SE  */
-  YYSYMBOL_ENTAO = 18,                     /* ENTAO  */
-  YYSYMBOL_SENAO = 19,                     /* SENAO  */
-  YYSYMBOL_FIMENTAO = 20,                  /* FIMENTAO  */
-  YYSYMBOL_FIMSENAO = 21,                  /* FIMSENAO  */
-  YYSYMBOL_num = 22,                       /* num  */
-  YYSYMBOL_var = 23,                       /* var  */
-  YYSYMBOL_24_ = 24,                       /* ';'  */
-  YYSYMBOL_25_ = 25,                       /* ':'  */
-  YYSYMBOL_YYACCEPT = 26,                  /* $accept  */
-  YYSYMBOL_programa = 27,                  /* programa  */
-  YYSYMBOL_cmds = 28,                      /* cmds  */
-  YYSYMBOL_cmd = 29,                       /* cmd  */
-  YYSYMBOL_atribuicao = 30,                /* atribuicao  */
-  YYSYMBOL_impressao = 31,                 /* impressao  */
-  YYSYMBOL_operacao = 32,                  /* operacao  */
-  YYSYMBOL_repeticao = 33,                 /* repeticao  */
-  YYSYMBOL_34_1 = 34,                      /* $@1  */
-  YYSYMBOL_condicao = 35,                  /* condicao  */
-  YYSYMBOL_36_2 = 36,                      /* $@2  */
-  YYSYMBOL_37_3 = 37,                      /* $@3  */
-  YYSYMBOL_senao = 38,                     /* senao  */
-  YYSYMBOL_39_4 = 39,                      /* $@4  */
-  YYSYMBOL_expr_bool = 40,                 /* expr_bool  */
-  YYSYMBOL_encerrar = 41                   /* encerrar  */
+  YYSYMBOL_SOME = 7,                       /* SOME  */
+  YYSYMBOL_COM = 8,                        /* COM  */
+  YYSYMBOL_MULTIPLIQUE = 9,                /* MULTIPLIQUE  */
+  YYSYMBOL_POR = 10,                       /* POR  */
+  YYSYMBOL_SUBTRAIA = 11,                  /* SUBTRAIA  */
+  YYSYMBOL_DE = 12,                        /* DE  */
+  YYSYMBOL_REPITA = 13,                    /* REPITA  */
+  YYSYMBOL_VEZES = 14,                     /* VEZES  */
+  YYSYMBOL_FIM = 15,                       /* FIM  */
+  YYSYMBOL_SE = 16,                        /* SE  */
+  YYSYMBOL_ENTAO = 17,                     /* ENTAO  */
+  YYSYMBOL_SENAO = 18,                     /* SENAO  */
+  YYSYMBOL_FIMENTAO = 19,                  /* FIMENTAO  */
+  YYSYMBOL_num = 20,                       /* num  */
+  YYSYMBOL_var = 21,                       /* var  */
+  YYSYMBOL_22_ = 22,                       /* ';'  */
+  YYSYMBOL_23_ = 23,                       /* ':'  */
+  YYSYMBOL_YYACCEPT = 24,                  /* $accept  */
+  YYSYMBOL_programa = 25,                  /* programa  */
+  YYSYMBOL_cmds = 26,                      /* cmds  */
+  YYSYMBOL_cmd = 27,                       /* cmd  */
+  YYSYMBOL_atribuicao = 28,                /* atribuicao  */
+  YYSYMBOL_impressao = 29,                 /* impressao  */
+  YYSYMBOL_operacao = 30,                  /* operacao  */
+  YYSYMBOL_repeticao = 31,                 /* repeticao  */
+  YYSYMBOL_32_1 = 32,                      /* $@1  */
+  YYSYMBOL_condicao = 33,                  /* condicao  */
+  YYSYMBOL_34_2 = 34,                      /* $@2  */
+  YYSYMBOL_35_3 = 35,                      /* $@3  */
+  YYSYMBOL_senao = 36,                     /* senao  */
+  YYSYMBOL_37_4 = 37,                      /* $@4  */
+  YYSYMBOL_expr_bool = 38                  /* expr_bool  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -697,21 +655,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  27
+#define YYFINAL  25
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   49
+#define YYLAST   59
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  26
+#define YYNTOKENS  24
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  16
+#define YYNNTS  15
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  28
+#define YYNRULES  30
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  63
+#define YYNSTATES  68
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   278
+#define YYMAXUTOK   276
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -730,7 +688,7 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    25,    24,
+       2,     2,     2,     2,     2,     2,     2,     2,    23,    22,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -752,16 +710,17 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15,    16,    17,    18,    19,    20,    21,    22,    23
+      15,    16,    17,    18,    19,    20,    21
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   246,   246,   250,   251,   255,   256,   257,   258,   259,
-     260,   264,   265,   266,   270,   274,   275,   276,   280,   280,
-     287,   290,   286,   297,   297,   300,   303,   305,   308
+       0,   207,   207,   211,   212,   216,   217,   218,   219,   220,
+     224,   225,   226,   230,   231,   235,   236,   237,   238,   239,
+     240,   245,   245,   252,   255,   251,   262,   262,   265,   268,
+     270
 };
 #endif
 
@@ -778,11 +737,11 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "FACA", "NOVO", "SER",
-  "MOSTRE", "ENCERRAR", "SOME", "COM", "MULTIPLIQUE", "POR", "SUBTRAIA",
-  "DE", "REPITA", "VEZES", "FIM", "SE", "ENTAO", "SENAO", "FIMENTAO",
-  "FIMSENAO", "num", "var", "';'", "':'", "$accept", "programa", "cmds",
-  "cmd", "atribuicao", "impressao", "operacao", "repeticao", "$@1",
-  "condicao", "$@2", "$@3", "senao", "$@4", "expr_bool", "encerrar", YY_NULLPTR
+  "MOSTRE", "SOME", "COM", "MULTIPLIQUE", "POR", "SUBTRAIA", "DE",
+  "REPITA", "VEZES", "FIM", "SE", "ENTAO", "SENAO", "FIMENTAO", "num",
+  "var", "';'", "':'", "$accept", "programa", "cmds", "cmd", "atribuicao",
+  "impressao", "operacao", "repeticao", "$@1", "condicao", "$@2", "$@3",
+  "senao", "$@4", "expr_bool", YY_NULLPTR
 };
 
 static const char *
@@ -792,7 +751,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-20)
+#define YYPACT_NINF (-18)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -806,13 +765,13 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -1,    -3,   -19,   -16,   -13,    -6,    -5,   -10,   -20,    19,
-     -20,    -1,   -20,   -20,   -20,   -20,   -20,   -20,     0,    16,
-       1,   -20,    15,    17,    13,    12,    -8,   -20,   -20,    -2,
-       7,   -20,     8,     9,    10,     5,   -20,   -20,    18,    21,
-     -20,    11,    14,    20,    22,   -20,   -20,    23,   -20,   -20,
-     -20,   -20,    -1,    -1,   -20,    24,    26,   -20,   -20,    28,
-      -1,   -20,   -20
+      -1,    -3,    -7,   -17,   -14,   -12,    -9,   -18,    19,   -18,
+      -1,   -18,   -18,   -18,   -18,   -18,     6,    23,     7,     8,
+      24,    21,    22,    25,    -4,   -18,   -18,    -2,    13,   -18,
+     -18,     1,     3,     5,    12,   -18,   -18,    20,    16,   -18,
+      18,    27,    28,    29,    30,    31,    32,   -18,   -18,    34,
+     -18,   -18,   -18,   -18,   -18,   -18,   -18,    -1,    -1,   -18,
+      26,    39,   -18,   -18,    40,    -1,   -18,   -18
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -820,27 +779,27 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,     0,     0,     0,     0,     0,    20,     0,
-       2,     4,     5,     6,     7,     8,     9,    10,     0,     0,
-       0,    28,     0,     0,     0,     0,     0,     1,     3,     0,
-       0,    14,     0,     0,     0,     0,    27,    26,     0,     0,
-      12,     0,     0,     0,     0,    18,    21,     0,    13,    15,
-      17,    16,     0,     0,    11,     0,    25,    19,    23,     0,
-       0,    22,    24
+       0,     0,     0,     0,     0,     0,     0,    23,     0,     2,
+       4,     5,     6,     7,     8,     9,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     1,     3,     0,     0,    14,
+      13,     0,     0,     0,     0,    30,    29,     0,     0,    11,
+       0,     0,     0,     0,     0,     0,     0,    21,    24,     0,
+      12,    18,    15,    20,    17,    19,    16,     0,     0,    10,
+       0,    28,    22,    26,     0,     0,    25,    27
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -20,   -20,   -11,   -20,   -20,   -20,   -20,   -20,   -20,   -20,
-     -20,   -20,   -20,   -20,   -20,   -20
+     -18,   -18,   -10,   -18,   -18,   -18,   -18,   -18,   -18,   -18,
+     -18,   -18,   -18,   -18,   -18
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     9,    10,    11,    12,    13,    14,    15,    52,    16,
-      26,    53,    59,    60,    38,    17
+       0,     8,     9,    10,    11,    12,    13,    14,    57,    15,
+      24,    58,    64,    65,    37
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -848,49 +807,53 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      28,    18,     1,    39,    20,     2,     3,     4,    21,     5,
-      22,     6,    25,     7,    36,    37,     8,    23,    24,    27,
-      19,    30,    40,    29,    32,    31,    34,    35,    33,    41,
-      45,    42,    43,    44,     0,    48,    46,     0,    49,     0,
-      57,    55,    56,    47,    50,    58,    51,    54,    61,    62
+      26,    16,     1,    38,    20,     2,     3,    21,     4,    22,
+       5,    23,     6,    18,    19,     7,    35,    36,    17,    25,
+      39,    41,    42,    43,    44,    45,    46,    27,    28,    29,
+      30,    32,    31,    40,    33,    47,    49,    48,     0,    34,
+      50,    62,     0,     0,     0,     0,     0,    60,    61,    51,
+      52,    53,    54,    55,    56,    67,    59,    63,     0,    66
 };
 
 static const yytype_int8 yycheck[] =
 {
-      11,     4,     3,     5,    23,     6,     7,     8,    24,    10,
-      23,    12,    22,    14,    22,    23,    17,    23,    23,     0,
-      23,     5,    24,    23,     9,    24,    13,    15,    11,    22,
-      25,    23,    23,    23,    -1,    24,    18,    -1,    24,    -1,
-      16,    52,    53,    22,    24,    19,    24,    24,    20,    60
+      10,     4,     3,     5,    21,     6,     7,    21,     9,    21,
+      11,    20,    13,    20,    21,    16,    20,    21,    21,     0,
+      22,    20,    21,    20,    21,    20,    21,    21,     5,    22,
+      22,    10,     8,    20,    12,    23,    20,    17,    -1,    14,
+      22,    15,    -1,    -1,    -1,    -1,    -1,    57,    58,    22,
+      22,    22,    22,    22,    22,    65,    22,    18,    -1,    19
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,     6,     7,     8,    10,    12,    14,    17,    27,
-      28,    29,    30,    31,    32,    33,    35,    41,     4,    23,
-      23,    24,    23,    23,    23,    22,    36,     0,    28,    23,
-       5,    24,     9,    11,    13,    15,    22,    23,    40,     5,
-      24,    22,    23,    23,    23,    25,    18,    22,    24,    24,
-      24,    24,    34,    37,    24,    28,    28,    16,    19,    38,
-      39,    20,    28
+       0,     3,     6,     7,     9,    11,    13,    16,    25,    26,
+      27,    28,    29,    30,    31,    33,     4,    21,    20,    21,
+      21,    21,    21,    20,    34,     0,    26,    21,     5,    22,
+      22,     8,    10,    12,    14,    20,    21,    38,     5,    22,
+      20,    20,    21,    20,    21,    20,    21,    23,    17,    20,
+      22,    22,    22,    22,    22,    22,    22,    32,    35,    22,
+      26,    26,    15,    18,    36,    37,    19,    26
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    26,    27,    28,    28,    29,    29,    29,    29,    29,
-      29,    30,    30,    30,    31,    32,    32,    32,    34,    33,
-      36,    37,    35,    39,    38,    38,    40,    40,    41
+       0,    24,    25,    26,    26,    27,    27,    27,    27,    27,
+      28,    28,    28,    29,    29,    30,    30,    30,    30,    30,
+      30,    32,    31,    34,    35,    33,    37,    36,    36,    38,
+      38
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     1,     2,     1,     1,     1,     1,     1,     1,
-       1,     6,     4,     5,     3,     5,     5,     5,     0,     7,
-       0,     0,     8,     0,     3,     0,     1,     1,     2
+       6,     4,     5,     3,     3,     5,     5,     5,     5,     5,
+       5,     0,     7,     0,     0,     8,     0,     3,     0,     1,
+       1
 };
 
 
@@ -1354,163 +1317,175 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: cmds  */
-#line 246 "grammar.y"
+#line 207 "grammar.y"
          {;}
-#line 1360 "grammar.tab.c"
+#line 1323 "grammar.tab.c"
     break;
 
   case 3: /* cmds: cmd cmds  */
-#line 250 "grammar.y"
+#line 211 "grammar.y"
              {;}
-#line 1366 "grammar.tab.c"
+#line 1329 "grammar.tab.c"
     break;
 
   case 4: /* cmds: cmd  */
-#line 251 "grammar.y"
+#line 212 "grammar.y"
           {;}
-#line 1372 "grammar.tab.c"
+#line 1335 "grammar.tab.c"
     break;
 
   case 5: /* cmd: atribuicao  */
-#line 255 "grammar.y"
+#line 216 "grammar.y"
                {;}
-#line 1378 "grammar.tab.c"
+#line 1341 "grammar.tab.c"
     break;
 
   case 6: /* cmd: impressao  */
-#line 256 "grammar.y"
+#line 217 "grammar.y"
                 {;}
-#line 1384 "grammar.tab.c"
+#line 1347 "grammar.tab.c"
     break;
 
   case 7: /* cmd: operacao  */
-#line 257 "grammar.y"
+#line 218 "grammar.y"
                {;}
-#line 1390 "grammar.tab.c"
+#line 1353 "grammar.tab.c"
     break;
 
   case 8: /* cmd: repeticao  */
-#line 258 "grammar.y"
+#line 219 "grammar.y"
                 {;}
-#line 1396 "grammar.tab.c"
+#line 1359 "grammar.tab.c"
     break;
 
   case 9: /* cmd: condicao  */
-#line 259 "grammar.y"
+#line 220 "grammar.y"
                {;}
-#line 1402 "grammar.tab.c"
+#line 1365 "grammar.tab.c"
     break;
 
-  case 10: /* cmd: encerrar  */
-#line 260 "grammar.y"
-               {;}
-#line 1408 "grammar.tab.c"
+  case 10: /* atribuicao: FACA NOVO var SER num ';'  */
+#line 224 "grammar.y"
+                              { exportar_nova_atribuicao((yyvsp[-3].var), (yyvsp[-1].num)); set_valor_var((yyvsp[-3].var), (yyvsp[-1].num)); }
+#line 1371 "grammar.tab.c"
     break;
 
-  case 11: /* atribuicao: FACA NOVO var SER num ';'  */
-#line 264 "grammar.y"
-                              { exportar_nova_atribuicao((yyvsp[-3].var), (yyvsp[-1].num),0); set_valor_var((yyvsp[-3].var), (yyvsp[-1].num)); }
-#line 1414 "grammar.tab.c"
+  case 11: /* atribuicao: FACA NOVO var ';'  */
+#line 225 "grammar.y"
+                        { exportar_nova_atribuicao_vazia((yyvsp[-1].var)); set_valor_var((yyvsp[-1].var), 0);}
+#line 1377 "grammar.tab.c"
     break;
 
-  case 12: /* atribuicao: FACA NOVO var ';'  */
-#line 265 "grammar.y"
-                        { exportar_nova_atribuicao_vazia((yyvsp[-1].var),0); set_valor_var((yyvsp[-1].var), 0);}
-#line 1420 "grammar.tab.c"
+  case 12: /* atribuicao: FACA var SER num ';'  */
+#line 226 "grammar.y"
+                           { exportar_atribuicao((yyvsp[-3].var), (yyvsp[-1].num)); set_valor_var((yyvsp[-3].var), (yyvsp[-1].num)); }
+#line 1383 "grammar.tab.c"
     break;
 
-  case 13: /* atribuicao: FACA var SER num ';'  */
-#line 266 "grammar.y"
-                           { exportar_atribuicao((yyvsp[-3].var), (yyvsp[-1].num),0); set_valor_var((yyvsp[-3].var), (yyvsp[-1].num)); }
-#line 1426 "grammar.tab.c"
+  case 13: /* impressao: MOSTRE var ';'  */
+#line 230 "grammar.y"
+                   { exportar_impressao((yyvsp[-1].var)); }
+#line 1389 "grammar.tab.c"
     break;
 
-  case 14: /* impressao: MOSTRE var ';'  */
-#line 270 "grammar.y"
-                   { exportar_impressao((yyvsp[-1].var),0); }
-#line 1432 "grammar.tab.c"
+  case 14: /* impressao: MOSTRE num ';'  */
+#line 231 "grammar.y"
+                     { exportar_impressao_num((yyvsp[-1].num)); }
+#line 1395 "grammar.tab.c"
     break;
 
   case 15: /* operacao: SOME var COM var ';'  */
-#line 274 "grammar.y"
-                         { exportar_operacao_soma((yyvsp[-3].var), (yyvsp[-1].var),0); }
-#line 1438 "grammar.tab.c"
+#line 235 "grammar.y"
+                         { exportar_operacao_soma((yyvsp[-3].var), (yyvsp[-1].var)); }
+#line 1401 "grammar.tab.c"
     break;
 
   case 16: /* operacao: SUBTRAIA var DE var ';'  */
-#line 275 "grammar.y"
-                              { exportar_operacao_diferenca((yyvsp[-3].var), (yyvsp[-1].var),0); }
-#line 1444 "grammar.tab.c"
+#line 236 "grammar.y"
+                              { exportar_operacao_diferenca((yyvsp[-3].var), (yyvsp[-1].var)); }
+#line 1407 "grammar.tab.c"
     break;
 
   case 17: /* operacao: MULTIPLIQUE var POR var ';'  */
-#line 276 "grammar.y"
-                                  { exportar_operacao_multiplicacao((yyvsp[-3].var), (yyvsp[-1].var),0); }
-#line 1450 "grammar.tab.c"
+#line 237 "grammar.y"
+                                  { exportar_operacao_multiplicacao((yyvsp[-3].var), (yyvsp[-1].var)); }
+#line 1413 "grammar.tab.c"
     break;
 
-  case 18: /* $@1: %empty  */
-#line 280 "grammar.y"
-                         {exportar_repeticao((yyvsp[-2].num),0);}
-#line 1456 "grammar.tab.c"
+  case 18: /* operacao: SOME var COM num ';'  */
+#line 238 "grammar.y"
+                           { exportar_operacao_soma_num((yyvsp[-3].var), (yyvsp[-1].num)); }
+#line 1419 "grammar.tab.c"
     break;
 
-  case 19: /* repeticao: REPITA num VEZES ':' $@1 cmds FIM  */
-#line 282 "grammar.y"
-        { exportar_fim_repeticao(0); }
-#line 1462 "grammar.tab.c"
+  case 19: /* operacao: SUBTRAIA var DE num ';'  */
+#line 239 "grammar.y"
+                              { exportar_operacao_diferenca_num((yyvsp[-3].var), (yyvsp[-1].num)); }
+#line 1425 "grammar.tab.c"
     break;
 
-  case 20: /* $@2: %empty  */
-#line 287 "grammar.y"
-    { exportar("if("); }
-#line 1468 "grammar.tab.c"
+  case 20: /* operacao: MULTIPLIQUE var POR num ';'  */
+#line 240 "grammar.y"
+                                  { exportar_operacao_multiplicacao_num((yyvsp[-3].var), (yyvsp[-1].num)); }
+#line 1431 "grammar.tab.c"
     break;
 
-  case 21: /* $@3: %empty  */
-#line 290 "grammar.y"
-    { exportar(") {\n\t"); }
-#line 1474 "grammar.tab.c"
+  case 21: /* $@1: %empty  */
+#line 245 "grammar.y"
+                        {exportar_repeticao((yyvsp[-2].num)); num_ident++;}
+#line 1437 "grammar.tab.c"
     break;
 
-  case 22: /* condicao: SE $@2 expr_bool ENTAO $@3 cmds senao FIMENTAO  */
-#line 294 "grammar.y"
-    { exportar("}\n"); }
-#line 1480 "grammar.tab.c"
+  case 22: /* repeticao: REPITA num VEZES ':' $@1 cmds FIM  */
+#line 247 "grammar.y"
+        { num_ident--;exportar_fim_repeticao(); }
+#line 1443 "grammar.tab.c"
     break;
 
-  case 23: /* $@4: %empty  */
-#line 297 "grammar.y"
-          { exportar( "} else {\n\t"); }
-#line 1486 "grammar.tab.c"
+  case 23: /* $@2: %empty  */
+#line 252 "grammar.y"
+    { num_ident_anterior = num_ident; ; exportar("if("); num_ident = 0;}
+#line 1449 "grammar.tab.c"
     break;
 
-  case 25: /* senao: %empty  */
-#line 300 "grammar.y"
+  case 24: /* $@3: %empty  */
+#line 255 "grammar.y"
+    {  exportar(") {\n"); num_ident = num_ident_anterior + 1;}
+#line 1455 "grammar.tab.c"
+    break;
+
+  case 25: /* condicao: SE $@2 expr_bool ENTAO $@3 cmds senao FIMENTAO  */
+#line 259 "grammar.y"
+    {  num_ident--; exportar("}\n");}
+#line 1461 "grammar.tab.c"
+    break;
+
+  case 26: /* $@4: %empty  */
+#line 262 "grammar.y"
+          { exportar( "} else {\n");num_ident++; }
+#line 1467 "grammar.tab.c"
+    break;
+
+  case 28: /* senao: %empty  */
+#line 265 "grammar.y"
     {;}
-#line 1492 "grammar.tab.c"
+#line 1473 "grammar.tab.c"
     break;
 
-  case 26: /* expr_bool: var  */
-#line 303 "grammar.y"
+  case 29: /* expr_bool: var  */
+#line 268 "grammar.y"
        {  exportar_conteudo_if_var((yyvsp[0].var));}
-#line 1498 "grammar.tab.c"
+#line 1479 "grammar.tab.c"
     break;
 
-  case 27: /* expr_bool: num  */
-#line 305 "grammar.y"
+  case 30: /* expr_bool: num  */
+#line 270 "grammar.y"
         {  exportar_conteudo_if_num((yyvsp[0].num)); }
-#line 1504 "grammar.tab.c"
-    break;
-
-  case 28: /* encerrar: ENCERRAR ';'  */
-#line 308 "grammar.y"
-                 { encerrar(); }
-#line 1510 "grammar.tab.c"
+#line 1485 "grammar.tab.c"
     break;
 
 
-#line 1514 "grammar.tab.c"
+#line 1489 "grammar.tab.c"
 
       default: break;
     }
@@ -1703,7 +1678,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 311 "grammar.y"
+#line 273 "grammar.y"
 
 
 
@@ -1726,6 +1701,11 @@ int main(int argc, char* argv[]) {
         putchar(c);  // Imprime o caractere lido
     }
     rewind(yyin);
+
+    yyparse();
+    
     printf("\n");
-    return yyparse();
+    fprintf(output, "\n\treturn 0;\n}");
+    fclose(output);
+    return 0;
 }
