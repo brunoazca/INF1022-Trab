@@ -82,7 +82,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 242 "grammar.y"
+#line 249 "grammar.y"
 float num; char* var; float floatnum;
 
 #line 89 "grammar.tab.h"

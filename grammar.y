@@ -117,7 +117,7 @@ void exportar_atribuicao_float(const char* variavel, float valor) {
 
 void exportar_nova_atribuicao_float(const char* variavel, float valor) {
     char str_formatada[101];
-    sprintf(str_formatada, "int %s = %f;\n", variavel, valor);
+    sprintf(str_formatada, "float %s = %f;\n", variavel, valor);
     exportar(str_formatada);
 }
 
@@ -135,13 +135,20 @@ void exportar_nova_atribuicao_vazia(const char* variavel) {
 
 void exportar_impressao(const char* variavel) {
     char str_formatada[101];
-    sprintf(str_formatada, "printf(\"Mostrando %s: %%d\\n\", %s);\n", variavel, variavel);
+    sprintf(str_formatada, "printf(\"Mostrando %s: %%f\\n\", (double)%s);\n", variavel, variavel);
     exportar(str_formatada);
 }
 
 void exportar_impressao_num(int num) {
     char str_formatada[101];
     sprintf(str_formatada, "printf(\"Mostrando %d\\n\");\n", num);
+    exportar(str_formatada);
+}
+
+
+void exportar_impressao_float(float num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "printf(\"Mostrando %f\\n\");\n", num);
     exportar(str_formatada);
 }
 
@@ -277,6 +284,7 @@ atribuicao:
 impressao:
     MOSTRE var ';' { exportar_impressao($2); }
     | MOSTRE num ';' { exportar_impressao_num($2); }
+    | MOSTRE floatnum ';' { exportar_impressao_float($2); }
     ;
 
 operacao:
