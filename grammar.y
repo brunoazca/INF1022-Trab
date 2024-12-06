@@ -18,16 +18,11 @@ struct var {
 };
 typedef struct var Var;
 
-struct vars_if {
-    Var vars[100];
-};
-typedef struct vars_if VarsIF;
-
 Var variaveis[100];
-VarsIF variaveis_if[100] = {0};
 int var_count = 0;
-int ifs_count = 0;
-int local_if_count = 0;
+char buffer_cmds[1024];
+int buffer_pos = 0;
+
 
 char* itoa(int num) {
     char* arr = (char*)malloc(30); 
@@ -84,7 +79,30 @@ void exportar(const char* texto) {
     fprintf(output, "\t%s", texto);
 }
 
+void limpar_buffer() {
+    memset(buffer_cmds, 0, sizeof(buffer_cmds));
+    buffer_pos = 0;
+}
+
+void adicionar_ao_buffer(const char* texto) {
+   
+    int len = strlen(texto);
+    if (buffer_pos + len < sizeof(buffer_cmds)) {
+        strcpy(buffer_cmds + buffer_pos, texto);
+        buffer_pos += len;
+    } else {
+        fprintf(stderr, "Erro: buffer de comandos excedido\n");
+        exit(1);
+    }
+}
+
+void exportar_buffer() {
+    exportar(buffer_cmds);
+    limpar_buffer();  // Limpa o buffer após exportar
+}
+
 void encerrar(void) {
+    exportar_buffer();
     exportar("\n\treturn 0;\n}");
     fclose(output);
     exit(0);
@@ -99,84 +117,151 @@ int jaDeclarada(const char* variavel) {
     return 0;
 }
 
-void exportar_atribuicao(const char* variavel, int valor) {
+void exportar_atribuicao(const char* variavel, int valor, int ehBuffer) {
     char str_formatada[101];
     if (jaDeclarada(variavel)) {
         sprintf(str_formatada, "%s = %d;\n", variavel, valor);
-        exportar(str_formatada);
-    } else {
-        sprintf(str_formatada, "int %s = %d;\n", variavel, valor);
+        if(ehBuffer){
+            adicionar_ao_buffer(str_formatada);
+        } else{
+            exportar(str_formatada);
+        }
+    } else{
+        fprintf(stderr, "Erro: variavel nao declarada\n");
+        exit(1);
+    }
+}
+
+
+void exportar_nova_atribuicao(const char* variavel, int valor, int ehBuffer) {
+    char str_formatada[101];
+    sprintf(str_formatada, "int %s = %d;\n", variavel, valor);
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
         exportar(str_formatada);
     }
 }
 
-void exportar_impressao(const char* variavel) {
+
+
+void exportar_nova_atribuicao_vazia(const char* variavel, int ehBuffer) {
+    char str_formatada[101];
+    sprintf(str_formatada, "int %s;\n", variavel);
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+    }}
+
+void exportar_impressao(const char* variavel, int ehBuffer) {
     char str_formatada[101];
     sprintf(str_formatada, "printf(\"Mostrando %s: %%d\\n\", %s);\n", variavel, variavel);
-    exportar(str_formatada);
-}
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+    }}
 
-void exportar_operacao_soma(const char* variavel1, const char* variavel2) {
+void exportar_operacao_soma(const char* variavel1, const char* variavel2, int ehBuffer) {
     char str_formatada[101];
     sprintf(str_formatada, "%s += %s;\n", variavel1, variavel2);
-    exportar(str_formatada);
-}
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+    }}
 
-void exportar_operacao_diferenca(const char* variavel1, const char* variavel2) {
+void exportar_operacao_diferenca(const char* variavel1, const char* variavel2, int ehBuffer) {
     char str_formatada[101];
     sprintf(str_formatada, "%s -= %s;\n", variavel1, variavel2);
-    exportar(str_formatada);
-}
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+    }}
 
-void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel2) {
+void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel2, int ehBuffer) {
     char str_formatada[101];
     sprintf(str_formatada, "%s *= %s;\n", variavel1, variavel2);
-    exportar(str_formatada);
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+    }
 }
 
-void exportar_repeticao(int vezes) {
+void exportar_repeticao(int vezes, int ehBuffer) {
     char str_formatada[101];
     sprintf(str_formatada, "for (int i = 0; i < %d; i++) {\n", vezes);
-    exportar(str_formatada);
+
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+        exportar_buffer();
+
+    }
+
 }
 
-void exportar_fim_repeticao(void) {
-    exportar("}\n");
+void exportar_fim_repeticao(int ehBuffer) {
+    if(ehBuffer){
+        adicionar_ao_buffer("}\n");
+    } else{
+        exportar("}\n");
+    }
 }
 
-void exportar_if_num(int num) {
+void exportar_if_num(int num, int ehBuffer) {
     char str_formatada[101];
     sprintf(str_formatada, "if (%d) {\n", num);
-    exportar(str_formatada);
+    
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+        exportar_buffer();
+    }
+
 }
 
-void exportar_if_var(char* var) {
+void exportar_if_var(char* var, int ehBuffer) {
     char str_formatada[101];
     sprintf(str_formatada, "if (%s) {\n", var);
-    exportar(str_formatada);
+
+    if(ehBuffer){
+        adicionar_ao_buffer(str_formatada);
+    } else{
+        exportar(str_formatada);
+        exportar_buffer();
+
+    }
+
 }
 
-void exportar_else(void) {
-    exportar("else {\n");
+void exportar_else(int ehBuffer) {
+    if(ehBuffer){
+        adicionar_ao_buffer("else {\n");
+    } else{
+        exportar("else {\n");
+    }
 }
 
-void exportar_fim_condicao(void) {
-    exportar("}\n");
+void exportar_fim_condicao(int ehBuffer) {
+    if(ehBuffer){
+        adicionar_ao_buffer("}\n");
+    } else{
+        exportar("}\n");
+    }
 }
-
-void avanca_count_blocos_if(void) {
-    ifs_count++;
-    local_if_count = 0;
-}
-
-
 
 
 %}
 
 %union {int num; char* var;}
 %start programa
-%token FACA SER MOSTRE ENCERRAR SOME COM MULTIPLIQUE POR SUBTRAIA DE REPITA VEZES FIM SE ENTAO SENAO FIMENTAO FIMSENAO
+%token FACA NOVO SER MOSTRE ENCERRAR SOME COM MULTIPLIQUE POR SUBTRAIA DE REPITA VEZES FIM SE ENTAO SENAO FIMENTAO FIMSENAO
 %token <num> num
 %token <var> var
 
@@ -202,32 +287,75 @@ cmd:
     ;
 
 atribuicao:
-    FACA var SER num ';' { exportar_atribuicao($2, $4); set_valor_var($2, $4); }
+    FACA NOVO var SER num ';' { exportar_nova_atribuicao($3, $5,0); set_valor_var($3, $5); }
+    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3,0); set_valor_var($3, 0);}
+    | FACA var SER num ';' { exportar_atribuicao($2, $4,0); set_valor_var($2, $4); }
     ;
 
 impressao:
-    MOSTRE var ';' { exportar_impressao($2); }
+    MOSTRE var ';' { exportar_impressao($2,0); }
     ;
 
 operacao:
-    SOME var COM var ';' { exportar_operacao_soma($2, $4); }
-    | SUBTRAIA var DE var ';' { exportar_operacao_diferenca($2, $4); }
-    | MULTIPLIQUE var POR var ';' { exportar_operacao_multiplicacao($2, $4); }
+    SOME var COM var ';' { exportar_operacao_soma($2, $4,0); }
+    | SUBTRAIA var DE var ';' { exportar_operacao_diferenca($2, $4,0); }
+    | MULTIPLIQUE var POR var ';' { exportar_operacao_multiplicacao($2, $4,0); }
     ;
 
 repeticao:
-    REPITA num VEZES ':' cmds FIM { exportar_repeticao($2); exportar_fim_repeticao(); }
+    REPITA num VEZES ':' cmdsClosure FIM { exportar_repeticao($2,0); exportar_fim_repeticao(0); }
     ;
 
 condicao:
-    SE num ENTAO cmds FIMENTAO { exportar_if_num($2); exportar_fim_condicao(); }
-    | SE num ENTAO cmds SENAO cmds FIMSENAO { exportar_if_num($2); exportar_else(); exportar_fim_condicao(); }
-    | SE var ENTAO cmds FIMENTAO { exportar_if_var($2); exportar_else(); exportar_fim_condicao(); }
-    | SE var ENTAO cmds SENAO cmds FIMSENAO { exportar_if_var($2); exportar_else(); exportar_fim_condicao(); }
+    SE num ENTAO cmdsClosure FIMENTAO { exportar_if_num($2,0); exportar_fim_condicao(0); }
+    | SE num ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_num($2,0); exportar_else(0); exportar_fim_condicao(0); }
+    | SE var ENTAO cmdsClosure FIMENTAO { exportar_if_var($2,0); exportar_fim_condicao(0); }
+    | SE var ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_var($2,0); exportar_else(0); exportar_fim_condicao(0); }
     ;
 
 encerrar:
     ENCERRAR ';' { encerrar(); }
+    ;
+
+
+cmdsClosure:
+    cmdClosure cmdsClosure {;}
+    | cmdClosure {;}
+    ;
+
+cmdClosure:
+    atribuicaoClosure {;}
+    | impressaoClosure {;}
+    | operacaoClosure {;}
+    | repeticaoClosure {;}
+    | condicaoClosure {;}
+    ;
+
+atribuicaoClosure:
+    FACA NOVO var SER num ';' { exportar_nova_atribuicao($3, $5,1); set_valor_var($3, $5); }
+    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3,1); set_valor_var($3, 0);}
+    | FACA var SER num ';' { exportar_atribuicao($2, $4,1); set_valor_var($2, $4); }
+    ;
+
+impressaoClosure:
+    MOSTRE var ';' { exportar_impressao($2,1); }
+    ;
+
+operacaoClosure:
+    SOME var COM var ';' { exportar_operacao_soma($2, $4,1); }
+    | SUBTRAIA var DE var ';' { exportar_operacao_diferenca($2, $4,1); }
+    | MULTIPLIQUE var POR var ';' { exportar_operacao_multiplicacao($2, $4,1); }
+    ;
+
+repeticaoClosure:
+    REPITA num VEZES ':' cmdsClosure FIM { exportar_repeticao($2,1); exportar_fim_repeticao(1); }
+    ;
+
+condicaoClosure:
+    SE num ENTAO cmdsClosure FIMENTAO { exportar_if_num($2,1); exportar_fim_condicao(1); }
+    | SE num ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_num($2,1); exportar_else(1); exportar_fim_condicao(1); }
+    | SE var ENTAO cmdsClosure FIMENTAO { exportar_if_var($2,1); exportar_fim_condicao(1); }
+    | SE var ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_var($2,1); exportar_else(1); exportar_fim_condicao(1); }
     ;
 
 %%

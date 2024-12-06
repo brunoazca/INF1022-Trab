@@ -55,25 +55,26 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     FACA = 258,                    /* FACA  */
-    SER = 259,                     /* SER  */
-    MOSTRE = 260,                  /* MOSTRE  */
-    ENCERRAR = 261,                /* ENCERRAR  */
-    SOME = 262,                    /* SOME  */
-    COM = 263,                     /* COM  */
-    MULTIPLIQUE = 264,             /* MULTIPLIQUE  */
-    POR = 265,                     /* POR  */
-    SUBTRAIA = 266,                /* SUBTRAIA  */
-    DE = 267,                      /* DE  */
-    REPITA = 268,                  /* REPITA  */
-    VEZES = 269,                   /* VEZES  */
-    FIM = 270,                     /* FIM  */
-    SE = 271,                      /* SE  */
-    ENTAO = 272,                   /* ENTAO  */
-    SENAO = 273,                   /* SENAO  */
-    FIMENTAO = 274,                /* FIMENTAO  */
-    FIMSENAO = 275,                /* FIMSENAO  */
-    num = 276,                     /* num  */
-    var = 277                      /* var  */
+    NOVO = 259,                    /* NOVO  */
+    SER = 260,                     /* SER  */
+    MOSTRE = 261,                  /* MOSTRE  */
+    ENCERRAR = 262,                /* ENCERRAR  */
+    SOME = 263,                    /* SOME  */
+    COM = 264,                     /* COM  */
+    MULTIPLIQUE = 265,             /* MULTIPLIQUE  */
+    POR = 266,                     /* POR  */
+    SUBTRAIA = 267,                /* SUBTRAIA  */
+    DE = 268,                      /* DE  */
+    REPITA = 269,                  /* REPITA  */
+    VEZES = 270,                   /* VEZES  */
+    FIM = 271,                     /* FIM  */
+    SE = 272,                      /* SE  */
+    ENTAO = 273,                   /* ENTAO  */
+    SENAO = 274,                   /* SENAO  */
+    FIMENTAO = 275,                /* FIMENTAO  */
+    FIMSENAO = 276,                /* FIMSENAO  */
+    num = 277,                     /* num  */
+    var = 278                      /* var  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -82,10 +83,10 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 177 "grammar.y"
+#line 262 "grammar.y"
 int num; char* var;
 
-#line 89 "grammar.tab.h"
+#line 90 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

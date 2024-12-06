@@ -4,6 +4,7 @@
 
 %%
 "FACA"                  { return FACA; }
+"NOVO"                  { return NOVO; }
 "SER"                   { return SER; }
 "MOSTRE"                { return MOSTRE; }
 "ENCERRAR"              { return ENCERRAR; }
