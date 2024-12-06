@@ -14,7 +14,7 @@ FILE* output = NULL;
 
 struct var {
     char nome[31];
-    int valor; 
+    float valor;
 };
 typedef struct var Var;
 
@@ -91,10 +91,10 @@ int jaDeclarada(const char* variavel) {
     return 0;
 }
 
-void exportar_atribuicao(const char* variavel, int valor) {
+void exportar_atribuicao(const char* variavel, float valor) {
     char str_formatada[101];
     if (jaDeclarada(variavel)) {
-        sprintf(str_formatada, "%s = %d;\n", variavel, valor);
+        sprintf(str_formatada, "%s = %.0f;\n", variavel, valor);
         exportar(str_formatada);
     } else{
         fprintf(stderr, "Erro: variavel nao declarada\n");
@@ -102,9 +102,28 @@ void exportar_atribuicao(const char* variavel, int valor) {
     }
 }
 
-void exportar_nova_atribuicao(const char* variavel, int valor) {
+
+void exportar_atribuicao_float(const char* variavel, float valor) {
     char str_formatada[101];
-    sprintf(str_formatada, "int %s = %d;\n", variavel, valor);
+    if (jaDeclarada(variavel)) {
+        sprintf(str_formatada, "%s = %f;\n", variavel, valor);
+        exportar(str_formatada);
+    } else{
+        fprintf(stderr, "Erro: variavel nao declarada\n");
+        exit(1);
+    }
+}
+
+
+void exportar_nova_atribuicao_float(const char* variavel, float valor) {
+    char str_formatada[101];
+    sprintf(str_formatada, "int %s = %f;\n", variavel, valor);
+    exportar(str_formatada);
+}
+
+void exportar_nova_atribuicao(const char* variavel, float valor) {
+    char str_formatada[101];
+    sprintf(str_formatada, "int %s = %.0f;\n", variavel, valor);
     exportar(str_formatada);
 }
 
@@ -146,28 +165,47 @@ void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel
 }
 
 
-void exportar_operacao_soma_num(const char* variavel1, int num) {
+void exportar_operacao_soma_num(const char* variavel1, float num) {
     char str_formatada[101];
-    sprintf(str_formatada, "%s += %d;\n", variavel1, num);
+    sprintf(str_formatada, "%s += %.0f;\n", variavel1, num);
     exportar(str_formatada);
 }
 
-void exportar_operacao_diferenca_num(const char* variavel1, int num) {
+void exportar_operacao_diferenca_num(const char* variavel1, float num) {
     char str_formatada[101];
-    sprintf(str_formatada, "%s -= %d;\n", variavel1, num);
+    sprintf(str_formatada, "%s -= %.0f;\n", variavel1, num);
     exportar(str_formatada);
 }
 
-void exportar_operacao_multiplicacao_num(const char* variavel1, int num) {
+void exportar_operacao_multiplicacao_num(const char* variavel1, float num) {
     char str_formatada[101];
-    sprintf(str_formatada, "%s *= %d;\n", variavel1, num);
+    sprintf(str_formatada, "%s *= %.0f;\n", variavel1, num);
 
     exportar(str_formatada);
 }
 
-void exportar_repeticao(int vezes) {
+void exportar_operacao_soma_float(const char* variavel1, float num) {
     char str_formatada[101];
-    sprintf(str_formatada, "for (int i = 0; i < %d; i++) {\n", vezes);
+    sprintf(str_formatada, "%s += %f;\n", variavel1, num);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_diferenca_float(const char* variavel1, float num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s -= %f;\n", variavel1, num);
+    exportar(str_formatada);
+}
+
+void exportar_operacao_multiplicacao_float(const char* variavel1, float num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%s *= %f;\n", variavel1, num);
+
+    exportar(str_formatada);
+}
+
+void exportar_repeticao(float vezes) {
+    char str_formatada[101];
+    sprintf(str_formatada, "for (int i = 0; i < %.0f; i++) {\n", vezes);
 
     exportar(str_formatada);
 }
@@ -184,9 +222,16 @@ void exportar_conteudo_if_var(char* var) {
     exportar(str_formatada);
 
 }
-void exportar_conteudo_if_num(int num) {
+void exportar_conteudo_if_num(float num) {
     char str_formatada[101];
-    sprintf(str_formatada, "%d", num);
+    sprintf(str_formatada, "%.0f", num);
+    
+    exportar(str_formatada);
+}
+
+void exportar_conteudo_if_float(float num) {
+    char str_formatada[101];
+    sprintf(str_formatada, "%f", num);
     
     exportar(str_formatada);
 }
@@ -194,11 +239,12 @@ void exportar_conteudo_if_num(int num) {
 
 %}
 
-%union {int num; char* var;}
+%union {float num; char* var; float floatnum;}
 %start programa
 %token FACA NOVO SER MOSTRE SOME COM MULTIPLIQUE POR SUBTRAIA DE REPITA VEZES FIM SE ENTAO SENAO FIMENTAO 
 %token <num> num
 %token <var> var
+%token <floatnum> floatnum
 
 
 %%
@@ -222,8 +268,10 @@ cmd:
 
 atribuicao:
     FACA NOVO var SER num ';' { exportar_nova_atribuicao($3, $5); set_valor_var($3, $5); }
-    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3); set_valor_var($3, 0);}
     | FACA var SER num ';' { exportar_atribuicao($2, $4); set_valor_var($2, $4); }
+    | FACA NOVO var SER floatnum ';' { exportar_nova_atribuicao_float($3, $5); set_valor_var($3, $5); }
+    | FACA var SER floatnum ';' { exportar_atribuicao_float($2, $4); set_valor_var($2, $4); }
+    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3); set_valor_var($3, 0);}
     ;
 
 impressao:
@@ -238,6 +286,9 @@ operacao:
     | SOME var COM num ';' { exportar_operacao_soma_num($2, $4); }
     | SUBTRAIA var DE num ';' { exportar_operacao_diferenca_num($2, $4); }
     | MULTIPLIQUE var POR num ';' { exportar_operacao_multiplicacao_num($2, $4); }
+    | SOME var COM floatnum ';' { exportar_operacao_soma_float($2, $4); }
+    | SUBTRAIA var DE floatnum ';' { exportar_operacao_diferenca_float($2, $4); }
+    | MULTIPLIQUE var POR floatnum ';' { exportar_operacao_multiplicacao_float($2, $4); }
     ;
 
 
@@ -259,7 +310,7 @@ condicao:
     {  num_ident--; exportar("}\n");};
 
 senao:
-    SENAO { exportar( "} else {\n");num_ident++; }
+    SENAO { num_ident--; exportar( "} else {\n");num_ident++; }
     cmds
     | 
     {;}
@@ -268,6 +319,9 @@ expr_bool:
     var{  exportar_conteudo_if_var($1);}
     |
     num {  exportar_conteudo_if_num($1); };
+    |
+    floatnum {  exportar_conteudo_if_float($1); };
+
     
 
 %%

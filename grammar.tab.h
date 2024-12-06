@@ -72,7 +72,8 @@ extern int yydebug;
     SENAO = 273,                   /* SENAO  */
     FIMENTAO = 274,                /* FIMENTAO  */
     num = 275,                     /* num  */
-    var = 276                      /* var  */
+    var = 276,                     /* var  */
+    floatnum = 277                 /* floatnum  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -81,10 +82,10 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 197 "grammar.y"
-int num; char* var;
+#line 242 "grammar.y"
+float num; char* var; float floatnum;
 
-#line 88 "grammar.tab.h"
+#line 89 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

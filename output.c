@@ -2,21 +2,13 @@
 #include <stdlib.h>
 
 int main(void) {
-	int X = 10;
-	if(	X	) {
-		X = 30;
-	}
-	X = 10;
-	for (int i = 0; i < 3; i++) {
-		X = 100;
-		if(	X	) {
-			X = 30;
-			X = 10;
-			X = 30;
-			X = 10;
+	int resultado = 1.800000;
+	if(	resultado	) {
+		for (int i = 0; i < 9; i++) {
+			resultado *= 2.900000;
 		}
-		printf("Mostrando 10\n");
 	}
+	printf("Mostrando resultado: %d\n", resultado);
 
 	return 0;
 }
