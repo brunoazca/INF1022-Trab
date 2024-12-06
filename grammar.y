@@ -20,9 +20,6 @@ typedef struct var Var;
 
 Var variaveis[100];
 int var_count = 0;
-char buffer_cmds[1024];
-int buffer_pos = 0;
-
 
 char* itoa(int num) {
     char* arr = (char*)malloc(30); 
@@ -79,28 +76,6 @@ void exportar(const char* texto) {
     fprintf(output, "\t%s", texto);
 }
 
-void limpar_buffer() {
-    memset(buffer_cmds, 0, sizeof(buffer_cmds));
-    buffer_pos = 0;
-}
-
-void adicionar_ao_buffer(const char* texto) {
-   
-    int len = strlen(texto);
-    if (buffer_pos + len < sizeof(buffer_cmds)) {
-        strcpy(buffer_cmds + buffer_pos, texto);
-        buffer_pos += len;
-    } else {
-        fprintf(stderr, "Erro: buffer de comandos excedido\n");
-        exit(1);
-    }
-}
-
-void exportar_buffer() {
-    exportar(buffer_cmds);
-    limpar_buffer();  // Limpa o buffer após exportar
-}
-
 void encerrar(void) {
     exportar_buffer();
     exportar("\n\treturn 0;\n}");
@@ -117,7 +92,7 @@ int jaDeclarada(const char* variavel) {
     return 0;
 }
 
-void exportar_atribuicao(const char* variavel, int valor, int ehBuffer) {
+void exportar_atribuicao(const char* variavel, int valor) {
     char str_formatada[101];
     if (jaDeclarada(variavel)) {
         sprintf(str_formatada, "%s = %d;\n", variavel, valor);
@@ -133,7 +108,7 @@ void exportar_atribuicao(const char* variavel, int valor, int ehBuffer) {
 }
 
 
-void exportar_nova_atribuicao(const char* variavel, int valor, int ehBuffer) {
+void exportar_nova_atribuicao(const char* variavel, int valor) {
     char str_formatada[101];
     sprintf(str_formatada, "int %s = %d;\n", variavel, valor);
     if(ehBuffer){
@@ -145,7 +120,7 @@ void exportar_nova_atribuicao(const char* variavel, int valor, int ehBuffer) {
 
 
 
-void exportar_nova_atribuicao_vazia(const char* variavel, int ehBuffer) {
+void exportar_nova_atribuicao_vazia(const char* variavel) {
     char str_formatada[101];
     sprintf(str_formatada, "int %s;\n", variavel);
     if(ehBuffer){
@@ -154,7 +129,7 @@ void exportar_nova_atribuicao_vazia(const char* variavel, int ehBuffer) {
         exportar(str_formatada);
     }}
 
-void exportar_impressao(const char* variavel, int ehBuffer) {
+void exportar_impressao(const char* variavel) {
     char str_formatada[101];
     sprintf(str_formatada, "printf(\"Mostrando %s: %%d\\n\", %s);\n", variavel, variavel);
     if(ehBuffer){
@@ -163,7 +138,7 @@ void exportar_impressao(const char* variavel, int ehBuffer) {
         exportar(str_formatada);
     }}
 
-void exportar_operacao_soma(const char* variavel1, const char* variavel2, int ehBuffer) {
+void exportar_operacao_soma(const char* variavel1, const char* variavel2) {
     char str_formatada[101];
     sprintf(str_formatada, "%s += %s;\n", variavel1, variavel2);
     if(ehBuffer){
@@ -172,7 +147,7 @@ void exportar_operacao_soma(const char* variavel1, const char* variavel2, int eh
         exportar(str_formatada);
     }}
 
-void exportar_operacao_diferenca(const char* variavel1, const char* variavel2, int ehBuffer) {
+void exportar_operacao_diferenca(const char* variavel1, const char* variavel2) {
     char str_formatada[101];
     sprintf(str_formatada, "%s -= %s;\n", variavel1, variavel2);
     if(ehBuffer){
@@ -181,7 +156,7 @@ void exportar_operacao_diferenca(const char* variavel1, const char* variavel2, i
         exportar(str_formatada);
     }}
 
-void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel2, int ehBuffer) {
+void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel2) {
     char str_formatada[101];
     sprintf(str_formatada, "%s *= %s;\n", variavel1, variavel2);
     if(ehBuffer){
@@ -191,26 +166,15 @@ void exportar_operacao_multiplicacao(const char* variavel1, const char* variavel
     }
 }
 
-void exportar_repeticao(int vezes, int ehBuffer) {
+void exportar_repeticao(int vezes) {
     char str_formatada[101];
     sprintf(str_formatada, "for (int i = 0; i < %d; i++) {\n", vezes);
 
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-        exportar_buffer();
-
-    }
-
+    exportar(str_formatada);
 }
 
-void exportar_fim_repeticao(int ehBuffer) {
-    if(ehBuffer){
-        adicionar_ao_buffer("}\n");
-    } else{
-        exportar("}\n");
-    }
+void exportar_fim_repeticao() {
+    exportar("}\n");
 }
 
 
@@ -226,7 +190,6 @@ void exportar_conteudo_if_num(int num) {
     sprintf(str_formatada, "%d", num);
     
     exportar(str_formatada);
-
 }
 
 
@@ -261,25 +224,25 @@ cmd:
     ;
 
 atribuicao:
-    FACA NOVO var SER num ';' { exportar_nova_atribuicao($3, $5,0); set_valor_var($3, $5); }
-    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3,0); set_valor_var($3, 0);}
-    | FACA var SER num ';' { exportar_atribuicao($2, $4,0); set_valor_var($2, $4); }
+    FACA NOVO var SER num ';' { exportar_nova_atribuicao($3, $5); set_valor_var($3, $5); }
+    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3); set_valor_var($3);}
+    | FACA var SER num ';' { exportar_atribuicao($2, $4); set_valor_var($2, $4); }
     ;
 
 impressao:
-    MOSTRE var ';' { exportar_impressao($2,0); }
+    MOSTRE var ';' { exportar_impressao($2); }
     ;
 
 operacao:
-    SOME var COM var ';' { exportar_operacao_soma($2, $4,0); }
-    | SUBTRAIA var DE var ';' { exportar_operacao_diferenca($2, $4,0); }
-    | MULTIPLIQUE var POR var ';' { exportar_operacao_multiplicacao($2, $4,0); }
+    SOME var COM var ';' { exportar_operacao_soma($2, $4); }
+    | SUBTRAIA var DE var ';' { exportar_operacao_diferenca($2, $4); }
+    | MULTIPLIQUE var POR var ';' { exportar_operacao_multiplicacao($2, $4); }
     ;
 
 repeticao:
-    REPITA num VEZES ':' {exportar_repeticao($2,0);}
+    REPITA num VEZES ':' {exportar_repeticao($2);}
     cmds 
-    FIM { exportar_fim_repeticao(0); }
+    FIM { exportar_fim_repeticao(); }
     ;
 
 condicao:
