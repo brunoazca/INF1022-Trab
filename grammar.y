@@ -213,48 +213,22 @@ void exportar_fim_repeticao(int ehBuffer) {
     }
 }
 
-void exportar_if_num(int num, int ehBuffer) {
+
+void exportar_conteudo_if_var(char* var) {
     char str_formatada[101];
-    sprintf(str_formatada, "if (%d) {\n", num);
+    sprintf(str_formatada, "%s", var);
     
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-        exportar_buffer();
-    }
+    exportar(str_formatada);
 
 }
-
-void exportar_if_var(char* var, int ehBuffer) {
+void exportar_conteudo_if_num(int num) {
     char str_formatada[101];
-    sprintf(str_formatada, "if (%s) {\n", var);
-
-    if(ehBuffer){
-        adicionar_ao_buffer(str_formatada);
-    } else{
-        exportar(str_formatada);
-        exportar_buffer();
-
-    }
+    sprintf(str_formatada, "%d", num);
+    
+    exportar(str_formatada);
 
 }
 
-void exportar_else(int ehBuffer) {
-    if(ehBuffer){
-        adicionar_ao_buffer("else {\n");
-    } else{
-        exportar("else {\n");
-    }
-}
-
-void exportar_fim_condicao(int ehBuffer) {
-    if(ehBuffer){
-        adicionar_ao_buffer("}\n");
-    } else{
-        exportar("}\n");
-    }
-}
 
 
 %}
@@ -303,59 +277,35 @@ operacao:
     ;
 
 repeticao:
-    REPITA num VEZES ':' cmdsClosure FIM { exportar_repeticao($2,0); exportar_fim_repeticao(0); }
+    REPITA num VEZES ':' {exportar_repeticao($2,0);}
+    cmds 
+    FIM { exportar_fim_repeticao(0); }
     ;
 
 condicao:
-    SE num ENTAO cmdsClosure FIMENTAO { exportar_if_num($2,0); exportar_fim_condicao(0); }
-    | SE num ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_num($2,0); exportar_else(0); exportar_fim_condicao(0); }
-    | SE var ENTAO cmdsClosure FIMENTAO { exportar_if_var($2,0); exportar_fim_condicao(0); }
-    | SE var ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_var($2,0); exportar_else(0); exportar_fim_condicao(0); }
-    ;
+    SE 
+    { exportar("if("); } 
+    expr_bool 
+    ENTAO 
+    { exportar(") {\n\t"); }  
+    cmds
+    senao
+    FIMENTAO 
+    { exportar("}\n"); };
 
+senao:
+    SENAO { exportar( "} else {\n\t"); }
+    cmds
+    | 
+    {;}
+
+expr_bool:
+    var{  exportar_conteudo_if_var($1);}
+    |
+    num {  exportar_conteudo_if_num($1); };
+    
 encerrar:
     ENCERRAR ';' { encerrar(); }
-    ;
-
-
-cmdsClosure:
-    cmdClosure cmdsClosure {;}
-    | cmdClosure {;}
-    ;
-
-cmdClosure:
-    atribuicaoClosure {;}
-    | impressaoClosure {;}
-    | operacaoClosure {;}
-    | repeticaoClosure {;}
-    | condicaoClosure {;}
-    ;
-
-atribuicaoClosure:
-    FACA NOVO var SER num ';' { exportar_nova_atribuicao($3, $5,1); set_valor_var($3, $5); }
-    | FACA NOVO var ';' { exportar_nova_atribuicao_vazia($3,1); set_valor_var($3, 0);}
-    | FACA var SER num ';' { exportar_atribuicao($2, $4,1); set_valor_var($2, $4); }
-    ;
-
-impressaoClosure:
-    MOSTRE var ';' { exportar_impressao($2,1); }
-    ;
-
-operacaoClosure:
-    SOME var COM var ';' { exportar_operacao_soma($2, $4,1); }
-    | SUBTRAIA var DE var ';' { exportar_operacao_diferenca($2, $4,1); }
-    | MULTIPLIQUE var POR var ';' { exportar_operacao_multiplicacao($2, $4,1); }
-    ;
-
-repeticaoClosure:
-    REPITA num VEZES ':' cmdsClosure FIM { exportar_repeticao($2,1); exportar_fim_repeticao(1); }
-    ;
-
-condicaoClosure:
-    SE num ENTAO cmdsClosure FIMENTAO { exportar_if_num($2,1); exportar_fim_condicao(1); }
-    | SE num ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_num($2,1); exportar_else(1); exportar_fim_condicao(1); }
-    | SE var ENTAO cmdsClosure FIMENTAO { exportar_if_var($2,1); exportar_fim_condicao(1); }
-    | SE var ENTAO cmdsClosure SENAO cmdsClosure FIMSENAO { exportar_if_var($2,1); exportar_else(1); exportar_fim_condicao(1); }
     ;
 
 %%

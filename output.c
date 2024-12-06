@@ -3,11 +3,10 @@
 
 int main(void) {
 	int Y = 10;
-	for (int i = 0; i < 5; i++) {
-	Y = 10;
-if (Y) {
-}
-Y = 30;
+	for (int i = 0; i < 4; i++) {
+		if(	Y	) {
+		Y = 10;
+	}
 	}
 		
 	return 0;
